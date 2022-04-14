@@ -1,0 +1,48 @@
+﻿@inject IEnumerable<ICurrencyService> CurrencyServices
+
+@if (currencies == null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@currencies" FixedHeader FixedFooter Height="500px">
+        <ToolBarContent>
+            <MudTextField @bind-Value="search" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Symbol</MudTh>
+            <MudTh>Price</MudTh>
+            <MudTh>1d</MudTh>
+            <MudTh>7d</MudTh>
+            <MudTh>30d</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Symbol">@context.Symbol</MudTd>
+            <MudTd DataLabel="Price">@context.Price</MudTd>
+            <MudTd DataLabel="1d">@context.PriceChangeOneDay</MudTd>
+            <MudTd DataLabel="7d">@context.PriceChangeSevenDays</MudTd>
+            <MudTd DataLabel="30d">@context.PriceChangeThirtyDays</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter]
+    public string ServiceType { get; init; } = default!;
+
+    private ICurrencyService? _currencyService = default;
+
+    IEnumerable<Currency>? currencies = default;
+    private string? search = default;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currencyService ??= CurrencyServices.First(s => s.Type == ServiceType);
+        var currencySet = await _currencyService.Get(ReferenceCurrency.USD);
+        currencies = currencySet?.Values;
+    }
+}

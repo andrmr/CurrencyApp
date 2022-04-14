@@ -1,0 +1,27 @@
+﻿@page "/fiatcurrencyview"
+
+<h1>Fiat</h1>
+<div class="d-inline-flex p-2">test div</div>
+
+@*<CurrencyListTemplate Items="currencies">
+    <TableHeader>
+        <th>Symbol</th>
+        <th>Name</th>
+        <th>Price</th>
+    </TableHeader>
+    <RowTemplate Context="currency">
+        <td>@currency.Symbol</td>
+        <td>@currency.Name</td>
+        <td>@currency.Price</td>
+    </RowTemplate>
+</CurrencyListTemplate>
+
+@code {
+    private List<Currency> currencies = new()
+    {
+        new Currency { Symbol = "BTC", Price = 1},
+    };
+}*@
+
+@code {
+}

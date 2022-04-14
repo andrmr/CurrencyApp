@@ -1,0 +1,94 @@
+﻿@page "/currencyview/{ServiceType}"
+
+@using ClientGui.Data
+@inject IEnumerable<ICurrencyService> CurrencyServices
+
+<h1>@(ServiceType)</h1>
+
+<div class="d-inline-flex p-2">
+	<select @onchange="@OnBaseCurrencyChanged">
+		@foreach (var baseCurrency in Enum.GetValues(typeof(ReferenceCurrency)))
+		{
+			<option value=@baseCurrency>@baseCurrency.ToString()</option>
+		}
+	</select>
+</div>
+
+@if (Currencies is null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Symbol</th>
+				<th>Name</th>
+				<th>Price</th>
+				<th>1d %</th>
+				<th>7d %</th>
+				<th>30d %</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var (symbol, currency) in Currencies.OrderBy(p => p.Key))
+			{
+				<tr>
+					<td>@symbol</td>
+					<td>@currency.Name</td>
+					<td>@currency.Price</td>
+					<td>@priceChangeToString(currency.PriceChangeOneDay)</td>
+					<td>@priceChangeToString(currency.PriceChangeSevenDays)</td>
+					<td>@priceChangeToString(currency.PriceChangeThirtyDays)</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	[Parameter]
+	public string ServiceType { get; init; } = default!;
+
+	private ICurrencyService? _service;
+
+	private ReferenceCurrency BaseCurrency;
+
+	private CurrencySet? _currencies;
+	private CurrencySet? Currencies
+	{
+		get => _currencies;
+		set
+		{
+			_currencies = value;
+			InvokeAsync(StateHasChanged);
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_service ??= CurrencyServices.First(s => s.Type == ServiceType);
+		Currencies = await _service.Get(BaseCurrency);
+	}
+
+	private async void OnBaseCurrencyChanged(ChangeEventArgs args)
+	{
+		BaseCurrency = Enum.Parse<ReferenceCurrency>((string)args.Value!);
+		Currencies = await _service!.Get(BaseCurrency);
+	}
+
+    private string priceChangeToString(double? priceChange)
+    {
+		if (priceChange is null)
+		{
+			return "N/A";
+		}
+
+		var round = Math.Round((double)priceChange, 3);
+		var sign = round > 0 ? "↗" : (round < 0 ? "↘" : "");
+		var abs = Math.Abs(round);
+
+		return $"{sign} {abs}";
+	}
+}
